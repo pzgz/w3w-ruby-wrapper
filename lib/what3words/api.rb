@@ -13,17 +13,14 @@ module What3Words
     REGEX_3_WORD_ADDRESS = /^\p{L}+\.\p{L}+\.\p{L}+$/u
     REGEX_STRICT = /^\p{L}{3,}+\.\p{L}{3,}+\.\p{L}{3,}+$/u
 
-    BASE_URL = 'https://api.what3words.com/v2/'.freeze
+    BASE_URL = 'https://api.what3words.com/v3/'.freeze
 
     ENDPOINTS = {
-      forward: 'forward',
-      reverse: 'reverse',
-      languages: 'languages',
+      forward: 'convert-to-coordinates',
+      reverse: 'convert-to-3wa',
+      languages: 'available-languages',
       autosuggest: 'autosuggest',
-      standardblend: 'standardblend',
-      autosuggest_ml: 'autosuggest-ml',
-      standardblend_ml: 'standardblend-ml',
-      grid: 'grid'
+      grid: 'grid-section'
     }.freeze
 
     def initialize(params)
@@ -71,23 +68,9 @@ module What3Words
       response
     end
 
-    def standardblend(addr, lang, focus = {}, params = {})
-      request_params = assemble_standardblend_request_params(addr, lang, focus,
-                                                             params)
-      response = request! :standardblend, request_params
-      response
-    end
-
-    def standardblend_ml(addr, lang, focus = {}, params = {})
-      request_params = assemble_standardblend_request_params(addr, lang, focus,
-                                                             params)
-      response = request! :standardblend_ml, request_params
-      response
-    end
-
     def assemble_common_request_params(params)
       h = { key: key }
-      h[:lang] = params[:lang] if params[:lang]
+      h[:language] = params[:lang] if params[:lang]
       h[:format] = params[:format] if params[:format]
       h[:display] = params[:display] if params[:display]
       h
@@ -95,7 +78,7 @@ module What3Words
     private :assemble_common_request_params
 
     def assemble_forward_request_params(words_string, params)
-      h = { addr: words_string }
+      h = { words: words_string }
       h.merge(assemble_common_request_params(params))
     end
     private :assemble_forward_request_params
@@ -107,7 +90,7 @@ module What3Words
     private :assemble_grid_request_params
 
     def assemble_reverse_request_params(position, params)
-      h = { coords: position.join(',') }
+      h = { coordinates: position.join(',') }
       h.merge(assemble_common_request_params(params))
     end
     private :assemble_reverse_request_params
@@ -120,14 +103,6 @@ module What3Words
       h.merge(assemble_common_request_params(params))
     end
     private :assemble_autosuggest_request_params
-
-    def assemble_standardblend_request_params(addr, lang, focus, params)
-      h = { addr: addr }
-      h[:lang] = lang
-      h[:focus] = focus.join(',') if focus.respond_to? :join
-      h.merge(assemble_common_request_params(params))
-    end
-    private :assemble_standardblend_request_params
 
     def request!(endpoint_name, params)
       # puts endpoint_name.inspect
